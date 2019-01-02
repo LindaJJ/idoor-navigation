@@ -9,6 +9,5 @@
     </settings>
     <typeAliases>
         <typeAlias type="com.linda.homework.lindaindoornavigation.model.lindo.NodeDO" alias="nodeDO"/>
-        <package name="com.linda.homework.lindaindoornavigation.model.lindo"/>
     </typeAliases>
 </configuration>

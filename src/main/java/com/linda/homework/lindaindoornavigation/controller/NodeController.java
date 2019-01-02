@@ -1,13 +1,16 @@
 package com.linda.homework.lindaindoornavigation.controller;
 
+import com.linda.homework.lindaindoornavigation.controller.service.NodeService;
 import com.linda.homework.lindaindoornavigation.controller.service.lindto.ResponseDTO;
 import com.linda.homework.lindaindoornavigation.model.lindo.NodeDO;
-import com.linda.homework.lindaindoornavigation.model.mapper.NodeMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 节点Controller
@@ -17,21 +20,23 @@ import javax.annotation.Resource;
 @RequestMapping("/node")
 public class NodeController extends BaseController {
 
+    private static Logger logger = LoggerFactory.getLogger(NodeController.class);
+
     @Resource
-    private NodeMapper nodeMapper;
+    private NodeService nodeService;
 
     @RequestMapping("addNode")
     public ResponseDTO<Boolean> addNode(NodeDO nodeDO){
-        try {
-            nodeMapper.addNode(nodeDO);
-        }
-        catch(Throwable throwable){
-            // todo 暂时输出 后面改成日志
-            System.out.println(throwable);
-            return buildSystemErrorResult();
-        }
-        ResponseDTO<Boolean> responseDTO = new ResponseDTO<>();
-        responseDTO.setSuccess(true);
-        return responseDTO;
+        return nodeService.addNode(nodeDO);
+    }
+
+    @RequestMapping("deleteNode")
+    public ResponseDTO<Boolean> delete(String nodeId){
+        return nodeService.deleteNode(nodeId);
+    }
+
+    @RequestMapping("getAllNodes")
+    public ResponseDTO<List<NodeDO>> getAllNodes(){
+        return nodeService.getAllNodes();
     }
 }

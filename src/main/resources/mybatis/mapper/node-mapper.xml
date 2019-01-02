@@ -10,14 +10,19 @@
         <!--from user_t-->
         <!--where id = #{id,jdbcType=INTEGER}-->
     <!--</select>-->
-    <!--<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >-->
-        <!--delete from user_t-->
-        <!--where id = #{id,jdbcType=INTEGER}-->
-    <!--</delete>-->
+    <delete id="deleteNode" parameterType="java.lang.String" >
+        delete from node_info
+        where node_id = #{nodeId}
+    </delete>
     <insert id="addNode" parameterType="nodeDO" >
         insert into node_info (node_id, node_name, relevant_node)
         values (#{nodeId}, #{nodeName}, #{relevantNode})
     </insert>
+    <select id="getAllNodes" resultType="nodeDO">
+        select
+        <include refid="allColumn" />
+        from node_info
+    </select>
     <!--<insert id="insertSelective" parameterType="com.xdd.entity.User" >-->
         <!--insert into user_t-->
         <!--<trim prefix="(" suffix=")" suffixOverrides="," >-->
