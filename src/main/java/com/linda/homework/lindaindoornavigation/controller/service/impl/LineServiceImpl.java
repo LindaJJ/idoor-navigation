@@ -11,9 +11,14 @@ import com.linda.homework.lindaindoornavigation.util.Tuple;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Component("lineService")
 public class LineServiceImpl implements LineService {
@@ -30,26 +35,71 @@ public class LineServiceImpl implements LineService {
      */
     private final Map<Tuple<String, String>, String> shortestPath = new ConcurrentHashMap<>();
 
-    public LineServiceImpl() throws Exception {
-        ResponseDTO<List<NodeDO>> responseDTO = nodeService.getAllNodes();
-        if(!responseDTO.getSuccess()){
-            throw new Exception("初始化节点关系失败");
-        }
-        List<NodeDO> nodeDOS = responseDTO.getData();
+    /**
+     * 定时调度 更新最短路径
+     */
+    private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
 
-        refreshGraph( shortestPath, shortestDistance, nodeDOS);
+    /**
+     * 所有节点
+     */
+    private List<NodeDO> nodeDOS;
+
+    public LineServiceImpl(){
+
+        /**
+         * 启动定时调度任务 定时修改最短路径
+         */
+        RefreshPathRunnable refreshPathRunnable = new RefreshPathRunnable();
+        scheduledExecutorService.scheduleAtFixedRate(refreshPathRunnable, 0, 60, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 根据开始地点id和结束地点id获取最短路径
+     * @param startNodeId
+     * @param endNodeId
+     * @return
+     */
+    @Override
+    public List<NodeDO> getShortestPath(String startNodeId, String endNodeId){
+        Tuple<String, String> pathTuple = new Tuple<>(startNodeId, endNodeId);
+        Map<String, NodeDO> idNodeDOMap = nodeDOS.stream().collect(Collectors.toMap(NodeDO :: getNodeId, nodeDO -> nodeDO));
+        String nextNodeId = shortestPath.get(pathTuple);
+        List<NodeDO> result = new ArrayList<>();
+        while(nextNodeId != null){
+            result.add(idNodeDOMap.get(startNodeId));
+            pathTuple = new Tuple<>(nextNodeId, endNodeId);
+            nextNodeId = shortestPath.get(pathTuple);
+        }
+        return result;
+    }
+
+    /**
+     * 更新最短路径任务
+     */
+    class RefreshPathRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            ResponseDTO<List<NodeDO>> responseDTO = nodeService.getAllNodes();
+            if(!responseDTO.getSuccess()){
+                // do nothing about log
+                return;
+            }
+            refresh(responseDTO.getData());
+        }
     }
 
     /**
      * 更新最短路径关系和最短距离关系
-     * @param shortestPath
-     * @param shortestDistance
      * @param nodeDOS
      * @return
      */
-    private void refreshGraph(Map<Tuple<String, String>, String> shortestPath, Map<Tuple<String, String>, Long> shortestDistance, List<NodeDO> nodeDOS) {
+    private void refresh(List<NodeDO> nodeDOS) {
 
-        initGraph(shortestPath, shortestDistance, nodeDOS);
+        this.nodeDOS = nodeDOS;
+
+        initGraph(nodeDOS);
 
         for(int k=1; k<=nodeDOS.size(); k++){
             for(int i=1; i<=nodeDOS.size(); i++){
@@ -70,12 +120,10 @@ public class LineServiceImpl implements LineService {
     }
 
     /**
-     * @param shortestPath
-     * @param shortestDistance
      * @param nodeDOS
      * 初始化图关系
      */
-    private void initGraph(Map<Tuple<String, String>, String> shortestPath, Map<Tuple<String, String>, Long> shortestDistance, List<NodeDO> nodeDOS){
+    private void initGraph(List<NodeDO> nodeDOS){
         shortestPath.clear();
         shortestDistance.clear();
         for(int i = 0; i < nodeDOS.size(); i++){

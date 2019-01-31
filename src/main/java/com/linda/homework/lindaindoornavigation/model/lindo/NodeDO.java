@@ -20,6 +20,17 @@ public class NodeDO {
      */
     private String relevantNode;
 
+    /**
+     * 图片对应的二进制字节流
+     */
+    private byte[] pic;
+
+    /**
+     * 感知哈希码
+     */
+    private String pHashCode;
+
+
     public String getNodeId() {
         return nodeId;
     }
@@ -42,5 +53,21 @@ public class NodeDO {
 
     public void setRelevantNode(String relevantNode) {
         this.relevantNode = relevantNode;
+    }
+
+    public byte[] getPic() {
+        return pic;
+    }
+
+    public void setPic(byte[] pic) {
+        this.pic = pic;
+    }
+
+    public String getpHashCode() {
+        return pHashCode;
+    }
+
+    public void setpHashCode(String pHashCode) {
+        this.pHashCode = pHashCode;
     }
 }
