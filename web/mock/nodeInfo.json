@@ -1,0 +1,33 @@
+[
+  {
+    "nodeId":"1",
+    "nodeName":"A101",
+    "revelantNode":[{
+      "nodeId":"2",
+      "angle":"0",
+      "distance":"100"
+    }, {
+      "nodeId":"3",
+      "angle":"90",
+      "distance":"200"
+    }]
+  },
+  {
+    "nodeId":"2",
+    "nodeName":"A102",
+    "revelantNode":[{
+      "nodeId":"1",
+      "angle":"270",
+      "distance":"100"
+    }]
+  },
+  {
+    "nodeId":"3",
+    "nodeName":"A103",
+    "revelantNode":[{
+      "nodeId":"1",
+      "angle":"270",
+      "distance":"200"
+    }]
+  }
+]
