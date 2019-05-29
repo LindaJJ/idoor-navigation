@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 import com.sun.image.codec.jpeg.ImageFormatException;
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGImageDecoder;
+import sun.misc.BASE64Decoder;
 
 
 public class ImageHelper {
@@ -121,15 +122,9 @@ public class ImageHelper {
      * 将二进制字节流转化为图片
      * @return
      */
-    public static BufferedImage readImage(byte[] picData){
+    public static BufferedImage readImage(byte[] picData) throws IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(picData);
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(in);
-        } catch (IOException e) {
-            // do nothing
-        }
-        return image;
+        return ImageIO.read(in);
     }
 
     public static byte[] readPNGBinary(BufferedImage image, String format){
@@ -167,5 +162,21 @@ public class ImageHelper {
         }
         m = m / pixels.length;
         return (int) m;
+    }
+
+    public static byte[] base64tobyteArr(String imgStr) throws IOException {
+        if (imgStr == null) {
+            return new byte[0];
+        }
+        BASE64Decoder decoder = new BASE64Decoder();
+        // 解密
+        byte[] b = decoder.decodeBuffer(imgStr);
+        // 处理数据
+        for (int i = 0; i < b.length; ++i) {
+            if (b[i] < 0) {
+                b[i] += 256;
+            }
+        }
+        return b;
     }
 }

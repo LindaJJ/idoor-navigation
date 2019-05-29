@@ -1,6 +1,7 @@
 package com.linda.homework.lindaindoornavigation.util;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -122,6 +123,15 @@ public class SimilarImageSearch {
     public static String produceFingerPrint(String filename) {
         BufferedImage source = ImageHelper.readPNGImage(filename);// 读取文件
         return produceFingerPrint(source);
+    }
+
+    /**
+     * 二进制字节流生成指纹
+     * @param bytes
+     * @return
+     */
+    public static String produceFingerPrint(byte[] bytes) throws IOException {
+        return produceFingerPrint(ImageHelper.readImage(bytes));
     }
 
     /**

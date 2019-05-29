@@ -28,4 +28,18 @@ public interface NodeMapper {
      * @param nodeId
      */
     void deleteNode(@Param("nodeId")String nodeId);
+
+    /**
+     * 获取指定节点
+     * @param nodeId
+     * @return
+     */
+    NodeDO getNodeById(@Param("nodeId")String nodeId);
+
+    /**
+     * 更新节点中的相关节点
+     * @param nodeId
+     * @param relevantNode
+     */
+    void updaterelevantNode(@Param("nodeId")String nodeId, @Param("relevantNode")String relevantNode);
 }

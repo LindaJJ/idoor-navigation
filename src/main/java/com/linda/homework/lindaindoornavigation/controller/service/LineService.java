@@ -1,6 +1,6 @@
 package com.linda.homework.lindaindoornavigation.controller.service;
 
-import com.linda.homework.lindaindoornavigation.model.lindo.NodeDO;
+import com.linda.homework.lindaindoornavigation.controller.dto.NodeDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,5 +17,7 @@ public interface LineService {
      * @param endNodeId
      * @return
      */
-    List<NodeDO> getShortestPath(String startNodeId, String endNodeId);
+    List<NodeDTO> getShortestPath(String startNodeId, String endNodeId);
+
+    void refreshPath();
 }

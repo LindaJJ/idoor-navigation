@@ -1,9 +1,13 @@
-package com.linda.homework.lindaindoornavigation.model.lindo;
+package com.linda.homework.lindaindoornavigation.controller.dto;
+
+import com.linda.homework.lindaindoornavigation.model.lindo.RelevantNodeDO;
+
+import java.util.List;
 
 /**
  * 节点数据对象
  */
-public class NodeDO {
+public class NodeDTO {
 
     /**
      * 节点id
@@ -16,14 +20,14 @@ public class NodeDO {
     private String nodeName;
 
     /**
-     * 相关节点信息Node
+     * 相关节点信息
      */
-    private String relevantNode;
+    private List<RelevantNodeDO> relevantNode;
 
     /**
      * 图片对应的base64
      */
-    private String nodePic;
+    private String pic;
 
     /**
      * 感知哈希码
@@ -47,20 +51,12 @@ public class NodeDO {
         this.nodeName = nodeName;
     }
 
-    public String getRelevantNode() {
-        return relevantNode;
+    public String getPic() {
+        return pic;
     }
 
-    public void setRelevantNode(String relevantNode) {
-        this.relevantNode = relevantNode;
-    }
-
-    public String getNodePic() {
-        return nodePic;
-    }
-
-    public void setNodePic(String nodePic) {
-        this.nodePic = nodePic;
+    public void setPic(String pic) {
+        this.pic = pic;
     }
 
     public String getpHashCode() {
@@ -69,5 +65,13 @@ public class NodeDO {
 
     public void setpHashCode(String pHashCode) {
         this.pHashCode = pHashCode;
+    }
+
+    public List<RelevantNodeDO> getRelevantNode() {
+        return relevantNode;
+    }
+
+    public void setRelevantNode(List<RelevantNodeDO> relevantNode) {
+        this.relevantNode = relevantNode;
     }
 }

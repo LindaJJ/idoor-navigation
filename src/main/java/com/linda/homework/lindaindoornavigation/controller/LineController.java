@@ -1,18 +1,19 @@
 package com.linda.homework.lindaindoornavigation.controller;
 
+import com.linda.homework.lindaindoornavigation.controller.dto.NodeDTO;
+import com.linda.homework.lindaindoornavigation.controller.dto.SimilarNodeDTO;
 import com.linda.homework.lindaindoornavigation.controller.service.LineService;
-import com.linda.homework.lindaindoornavigation.controller.service.NodeService;
 import com.linda.homework.lindaindoornavigation.controller.service.PictureService;
+import com.linda.homework.lindaindoornavigation.controller.util.TransUtils;
 import com.linda.homework.lindaindoornavigation.model.lindo.NodeDO;
+import com.linda.homework.lindaindoornavigation.util.Base64Util;
+import com.linda.homework.lindaindoornavigation.util.IDGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,26 +33,28 @@ public class LineController extends BaseController {
     @Resource
     private PictureService pictureService;
 
-    @RequestMapping("/getSimilarPic")
-    public List<NodeDO> rankSimilarPics(MultipartFile file){
-        List<NodeDO> nodeDOS = new ArrayList<>();
+    @PostMapping("/getSimilarPic")
+    public List<SimilarNodeDTO> rankSimilarPics(@RequestParam("imgStr") String imgStr){
+        List<SimilarNodeDTO> similarNodeDTOS = new ArrayList<>();
         try {
-            nodeDOS = pictureService.rankSamilarPics(file.getBytes());
+            similarNodeDTOS = pictureService.rankSimilarPics(Base64Util.decode(Base64Util.deleteJPEGBase64Prefix(imgStr)));
         } catch (Throwable e) {
             logger.error("LineController#rankSimilarPics", e);
         }
-        return nodeDOS;
+        return similarNodeDTOS;
     }
 
-    @RequestMapping("/getShortestPath")
-    public List<NodeDO> getShortestPath(String startNodeId, String endNodeId){
-        List<NodeDO> nodeDOS = new ArrayList<>();
+    @GetMapping("/getShortestPath")
+    public List<NodeDTO> getShortestPath(@RequestParam("startName") String startName, @RequestParam("endName") String endName){
+
         try {
-            nodeDOS = lineService.getShortestPath(startNodeId, endNodeId);
+            String startNodeId = IDGenerator.generateNodeId(java.net.URLDecoder.decode(startName , "UTF-8"));
+            String endNodeId = IDGenerator.generateNodeId(java.net.URLDecoder.decode(endName , "UTF-8"));
+            return lineService.getShortestPath(startNodeId, endNodeId);
         } catch (Throwable e) {
             logger.error("LineController#getShortestPath", e);
         }
-        return nodeDOS;
+        return new ArrayList<>();
     }
 
 }

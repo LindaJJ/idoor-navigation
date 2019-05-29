@@ -68,4 +68,35 @@ public class NodeServiceImpl implements NodeService {
         }
         return responseDTO;
     }
+
+    @Override
+    public ResponseDTO<NodeDO> getNodeById(String nodeId){
+        ResponseDTO<NodeDO> responseDTO = new ResponseDTO<>();
+        try {
+            NodeDO data = nodeMapper.getNodeById(nodeId);
+            responseDTO.setSuccess(true);
+            responseDTO.setData(data);
+        }
+        catch (Throwable throwable){
+            responseDTO.setSuccess(false);
+            logger.error("NodeServiceImpl#getNodeById", throwable);
+        }
+        return responseDTO;
+    }
+
+    @Override
+    public ResponseDTO<Boolean> updateRelevantNode(String nodeId, String relevantNode) {
+        ResponseDTO<Boolean> responseDTO = new ResponseDTO<>();
+        try {
+            nodeMapper.updaterelevantNode(nodeId, relevantNode);
+            responseDTO.setSuccess(true);
+            responseDTO.setData(true);
+        }
+        catch (Throwable throwable){
+            responseDTO.setSuccess(false);
+            responseDTO.setData(false);
+            logger.error("NodeServiceImpl#updateRelevantNode", throwable);
+        }
+        return responseDTO;
+    }
 }

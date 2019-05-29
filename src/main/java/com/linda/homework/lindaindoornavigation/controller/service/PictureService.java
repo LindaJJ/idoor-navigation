@@ -1,6 +1,6 @@
 package com.linda.homework.lindaindoornavigation.controller.service;
 
-import com.linda.homework.lindaindoornavigation.model.lindo.NodeDO;
+import com.linda.homework.lindaindoornavigation.controller.dto.SimilarNodeDTO;
 
 import java.util.List;
 
@@ -14,5 +14,5 @@ public interface PictureService {
      * @param picData 图片对应二进制字节流
      * @return
      */
-    List<NodeDO> rankSamilarPics(byte[] picData);
+    List<SimilarNodeDTO> rankSimilarPics(byte[] picData);
 }
