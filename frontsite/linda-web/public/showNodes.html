@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>节点的动画</title>
+</head>
+<body>
+<div id="mountNode"></div>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.0.0-beta.15/build/g6.js"></script>
+<script type="text/javascript">
+    // 保存图 记录每个节点的坐标 这个map的key为a-b 表示a到b的路线 value为这个路线的角度和距离组成的字符串 a-b和b-a分开存储 认为是两条记录
+    nodeGraph = {};
+
+    // 保存节点之间的关系 空间换时间
+    nodeRelationShip = {};
+
+    // 节点组成的链表 因为此处最短路径一定是一条线，而非一个图，此处摈弃临接表表示法 直接使用链表来表示
+    // todo: complete this list -- 2019/05/20 22:00:00
+    nodeList=[];
+
+    // 保存这一批节点中所有nodeId和nodeName的映射
+    nodeIdNameMap = {};
+
+    nodeLabelConfigJSON = {
+        position: 'bottom'
+    };
+
+    constValueJson = {};
+    // 距离系数 用来将基础距离乘上该值 从而使得展示出来的节点关系网不会太大也不会太小
+    // distanceConstant = 1;
+
+    // 此处认为200是正常值
+    nomalDistance = 200;
+
+    // 根据所有节点构建临接表 key为a-b形式 value为c-d形式 意义为b在a的c角度d距离处
+    function buildGraph(nodeInfo) {
+        let maxDistance = -1;
+        let minDistance = 9999;
+        for(let i = 0; i < nodeInfo.length; i++){
+            let relevantNodeForThis = nodeInfo[i].relevantNode;
+            for(let j = 0; j < relevantNodeForThis.length; j++){
+                let key = nodeInfo[i].nodeId + "-" + relevantNodeForThis[j].nodeId;
+                let distance = relevantNodeForThis[j].distance;
+                if(distance != null){
+                    if(maxDistance < distance){
+                        maxDistance = distance;
+                    }
+                    if(minDistance > distance){
+                        minDistance = distance;
+                    }
+                }
+                let angle = relevantNodeForThis[j].angle;
+                if(angle != null && distance != null) {
+                    nodeGraph[key] = angle + "-" + distance;
+                }
+            }
+        }
+        constValueJson["distanceConstant"] = nomalDistance/maxDistance;
+    }
+
+    // 构建节点间关系 空间换时间
+    function buildNodeRelationShip(nodeInfo){
+        // init
+        for(let i = 0; i < nodeInfo.length; i++){
+            nodeRelationShip[nodeInfo[i].nodeId] = [];
+        }
+        for(let i = 0; i < nodeInfo.length; i++){
+            let relevantNodeForThis = nodeInfo[i].relevantNode;
+            for(let j = 0; j < relevantNodeForThis.length; j++) {
+                nodeRelationShip[nodeInfo[i].nodeId].push(relevantNodeForThis[j].nodeId);
+            }
+        }
+    }
+
+    // 构建节点id和名称的映射
+    function buildIdNameMap(nodeInfo){
+        for(let i = 0; i < nodeInfo.length; i++){
+            nodeIdNameMap[nodeInfo[i].nodeId] = nodeInfo[i].nodeName;
+        }
+    }
+    //根据图之间的关系和起点构建G6组件所需节点数据 将(600, 300)视为中心坐标 以起点为中心坐标 描出所有节点
+    function buildNodeInfoForG6(startId){
+        // // 这个图只有一个联通分量 因此直接简单遍历
+        // // 先查找中心坐标
+        // // 已渲染的节点Id
+        // let handleNodeIdSet = new Set();
+        //
+        // // 所有待渲染节点的id
+        // let waitNodeIdList = new Array();
+        // for(let nodeId in nodeRelationShip){
+        //     if(nodeId != startId) {
+        //         waitNodeIdList.push(nodeId);
+        //     }
+        // }
+        // // 所有生成的节点数据
+        // let nodesData = [];
+        // let startNode = {};
+        // startNode.id = startId;
+        // startNode.x = 600;
+        // startNode.y = 300;
+        // startNode.shape = "circle-animate";
+        // startNode.size = 20;
+        // startNode.label = '起点:' + nodeIdNameMap[startId];
+        // startNode.labelCfg = nodeLabelConfigJSON;
+        // nodesData.push(startNode);
+        // handleNodeIdSet.add(startNode.id)
+        // addAll(nodesData, handleSingleNode(600, 300, startNode.id));
+        //
+        // let i = 0;
+        // while(waitNodeIdList.length != 1){
+        //     let node = {};
+        //     node.id = waitNodeIdList[i % waitNodeIdList.length];
+        //     let nodeData = getNodeLoc(node.id, nodesData);
+        //     if(nodeData != null && waitNodeIdList.indexOf(node.id) !== -1) {
+        //         addAll(nodesData, handleSingleNode(nodeData.x, nodeData.y, node.id));
+        //         waitNodeIdList.splice(i % waitNodeIdList.length, 1);
+        //         handleNodeIdSet.add(node.id);
+        //     }
+        //     i++;
+        // }
+
+
+        // the newest implementation
+        let nodesData = [];
+        let startNode = {};
+        startNode.id = startId;
+        startNode.x = 600;
+        startNode.y = 300;
+        startNode.shape = "circle-animate";
+        startNode.size = 20;
+        startNode.label = '起点:' + nodeIdNameMap[startId];
+        startNode.labelCfg = nodeLabelConfigJSON;
+        nodesData.push(startNode);
+        // 先读nodeRelationShip 得到与当前节点相关的节点 然后读nodeGraph获取角度-距离
+        let currentNodeId = startId;
+        let currentX = startNode.x;
+        let currentY = startNode.y;
+        while(nodeRelationShip[currentNodeId].length !== 0){
+            let preNodeId = currentNodeId;
+            currentNodeId = nodeRelationShip[currentNodeId][0];
+            let key = preNodeId + "-" + currentNodeId;
+            let value = nodeGraph[key];
+            let angleDistanceArr = value.split("-");
+            let newNode = {};
+            newNode.id = currentNodeId;
+            newNode.x = Math.cos(angleDistanceArr[0]*Math.PI/180)*angleDistanceArr[1]*constValueJson["distanceConstant"] + currentX;
+            newNode.y = Math.sin(angleDistanceArr[0]*Math.PI/180)*angleDistanceArr[1]*constValueJson["distanceConstant"] + currentY;
+            newNode.size = 20;
+            currentX = newNode.x;
+            currentY = newNode.y;
+            if(nodeRelationShip[currentNodeId].length !== 0) {
+                newNode.shape = "background-animate";
+                newNode.label = nodeIdNameMap[currentNodeId];
+            } else{
+                newNode.shape = "circle-animate";
+                newNode.label = '终点:' + nodeIdNameMap[currentNodeId];
+            }
+            newNode.labelCfg = nodeLabelConfigJSON;
+            nodesData.push(newNode);
+        }
+        console.log(nodesData);
+        // addAll(nodesData, handleSingleNode(600, 300, startNode.id));
+        return nodesData;
+    }
+
+    // 处理单个节点及其相关节点的关系 返回对应的G6数据
+    function handleSingleNode(x, y, nodeId){
+        // let dataArray = new Array();
+        // let relevantNodeIds = nodeRelationShip[nodeId];
+        // for(let i = 0; i < relevantNodeIds.length; i++){
+        //     let nodeGraphKey = nodeId + "-" + relevantNodeIds[i];
+        //     let nodeGraphValue = nodeGraph[nodeGraphKey];
+        //     if(typeof nodeGraphValue == "undefined"){
+        //         continue;
+        //     }
+        //     let nodeGraphValueArr = nodeGraphValue.split("-");
+        //     let angle = nodeGraphValueArr[0];
+        //     let distance = nodeGraphValueArr[1];
+        //     let newNode = {};
+        //     newNode.id = relevantNodeIds[i];
+        //     newNode.x = Math.cos(angle/Math.PI)*distance*constValueJson["distanceConstant"] + x;
+        //     newNode.y = Math.sin(angle/Math.PI)*distance*constValueJson["distanceConstant"] + y;
+        //     newNode.shape = 'background-animate';
+        //     newNode.size = 20;
+        //     newNode.label = nodeIdNameMap[newNode.id];
+        //     newNode.labelCfg = nodeLabelConfigJSON;
+        //     dataArray.push(newNode);
+        // }
+
+        // the newest implementation
+        // return dataArray;
+    }
+
+    // 集合的addAll操作 set是个集合 obj是个数组
+    function addAll(list, objs){
+        let contains = false;
+        for(let i = 0; i < objs.length; i++){
+            for(let element of list){
+                if(element.id == objs[i].id){
+                    contains = true;
+                    break;
+                }
+            }
+            if(!contains){
+                list.push(objs[i]);
+            }
+            contains = false;
+        }
+    }
+
+    // 判断nodesdata中是否包含指定nodeId nodesData为数组
+    function getNodeLoc(nodeId, nodesData){
+        for(let nodeData of nodesData){
+            if(nodeData.id == nodeId){
+                return nodeData;
+            }
+        }
+        return null;
+    }
+
+    function buildNodeEdge(){
+        let edgeSet = new Set();
+        let relationShipJsonArray = [];
+        for(let relationKey in nodeRelationShip){
+            let relevantNodeArray = nodeRelationShip[relationKey];
+            for(let relevantNode of relevantNodeArray){
+                let newRelationShip = {};
+                newRelationShip.source = relationKey;
+                newRelationShip.target = relevantNode;
+                let edge = relationKey + "-" + relevantNode;
+                let reverseEdge = relevantNode + "-" + relationKey;
+                if(edgeSet.has(edge) || edgeSet.has(reverseEdge)){
+                    continue;
+                }
+                let edgeInfo = nodeGraph[edge];
+                let distance = edgeInfo.split("-")[1];
+                newRelationShip.label = "距离" + distance;
+                newRelationShip.labelCfg = {refY : 30};
+                edgeSet.add(edge);
+                relationShipJsonArray.push(newRelationShip);
+            }
+        }
+        return relationShipJsonArray;
+    }
+    function init(nodeInfo){
+        buildGraph(nodeInfo);
+        buildNodeRelationShip(nodeInfo);
+        buildIdNameMap(nodeInfo);
+        console.log(nodeGraph)
+        console.log(nodeRelationShip)
+        console.log(nodeIdNameMap)
+        let startName = decodeURIComponent(getUrlParam("startName"));
+        let nodesData = buildNodeInfoForG6(getIdByName(startName));
+        let relationShipJsonArray = buildNodeEdge();
+        let data = {};
+        data.nodes = nodesData;
+        data.edges = relationShipJsonArray;
+        return data;
+    }
+
+    function getIdByName(name){
+        for(let id in nodeIdNameMap){
+            if(nodeIdNameMap[id] === name){
+                return id;
+            }
+        }
+        return "";
+    }
+
+    /**
+     * @return {string}
+     */
+    function getUrlParam(paraName) {
+        let url = document.location.toString();
+        let arrObj = url.split("?");
+
+        if (arrObj.length > 1) {
+            let arrPara = arrObj[1].split("&");
+            let arr;
+
+            for (let i = 0; i < arrPara.length; i++) {
+                arr = arrPara[i].split("=");
+
+                if (arr != null && arr[0] === paraName) {
+                    return arr[1];
+                }
+            }
+            return "";
+        }
+        else {
+            return "";
+        }
+    }
+
+    let _this = this
+    let nodeInfo = JSON.parse($.ajax({
+        type:'get',
+        url: "http://localhost:8080/line/getShortestPath",
+        async:false,
+        data:{"startName":_this.getUrlParam("startName"),"endName":_this.getUrlParam("endName")},
+        success(e, res, result) {
+            // do thing at all
+        }
+    }).responseText);
+    if(!nodeInfo || nodeInfo.length === 0){
+        alert("未找到相关路线");
+    }
+    console.log(nodeInfo);
+    let data = init(nodeInfo);
+    const Util = G6.Util;
+    // data = {
+    //     nodes: [{
+    //         id: 'node1',
+    //         x: 600,
+    //         y: 300,
+    //         shape: 'circle-animate',
+    //         size: 20,
+    //         label: '起点',
+    //         labelCfg: {
+    //             position: 'bottom'
+    //         }
+    //     },{
+    //         id: 'node2',
+    //         x: 300,
+    //         y: 200,
+    //         shape: 'background-animate',
+    //         color: 'red',
+    //         size: 20,
+    //         label: '终点',
+    //         labelCfg: {
+    //             position: 'bottom'
+    //         }
+    //     },{
+    //         id: 'node3',
+    //         x: 400,
+    //         y: 100,
+    //         size: [40, 40],
+    //         shape: 'inner-animate',
+    //         img: 'data:image/webp;base64,UklGRq4FAABXRUJQVlA4IKIFAABwHwCdASo8ADwAPiEMhEGhhv6rQAYAgS2NHsdCq/4D8AOoA64OEUAj/XPxVwyvRGvyO/gGxN/t3oK/1X6zesX3L/p/RP/2HCgKAB9AGeAbCB+AGwAbQBtA/8c/m/4PYHTonm+SzRH6B9sv2i/rOZC+G/ln9l/ML/GdoD7APcA/TD+09QDzAfrX+vHYM9AD+Uf0zrAPQA/bH0vv2t+CH9qf2R+A39e6X098/I7IAcLcs8Gjmc/9T7gPbX9H+wJ+rPVV9En9ZmBI5oUiYhkYHIVjRr9hzCTPcV5Rs/wjjIHkxPgtr/3ALZSuUm146HHwqQVA23hnnqH/4aJ/k4v4hU6RBZ0AAAD+//8ARPyL9yWIlAbWBAD0oKSqlYWreuRa3Oj02u+TvSQS8iwMYewUYTWLDNp9wOlFJaWnqE+za35UwUXuDAT6T0I4fwY+u+qrRVhl+S1ir4X7BQiNswug5AX+MjQcXEeUwfSIEUT+DFPCr+BUiwTbFxLni7fv61vRbmXoauLz4tiqOFTzEGP8tNXP5+H7mZVGfNjIxapT3FGUtqBdp/SD5cTOYOkn2fawkpqpCSqf2+CfiGWtIF673fEzlk/hIbWDhQ81C/ddxLn609d/5efckbdZ8HZbhhVmM82/Uat7CFmw1SH5xCxRxEEhjpf1EP1Xn5q9VZfm1+OFTab/MN67Xha8K//5oVBlMgZALE653X0fas/+2xMqiyCu5Wa7PHsCwbBwqROfNmzi4LPOTjkFPHVKDD1Nfj4/sul6cANdF68rf2jszlyZsUUoLTP7H3swSroc3ssNXSRVAcYd7+iBZpfoAYWvKgnr+Hv62fHZX5ZbjYbYzVjq6fsXkubto858NuUx4+ILb5y7dP6W3/IYVeUSF0yZseKIZhOMs9BBf5uB2Y3Ott//+1OG7hYINzcqigrzWAOJbSmVw3G0ULywkobx+rvfk8VmZFzQGgP/+4T74mp/vsZyM1NLguiTO2gNO05tcpXwveq5mrcweXrJ/bRZDmU2KBrnXhkXq+735c+UHTFq4h4jMOPm5shKioB6XaqhUf3DJlMg8937g/SKjrgD0H5sNm0/k4FfilBbcrsjc3dd6cwEYJo3CNhe3SpNJ2geNXyV4/hq/BZXZ1kiVknjmf5cUx7Tv/9Sb+fQ/DgAsRNSz1wiVodiLjP7aVrkxbWx5gJ8U/j0o1Ipm/nyDZRPrQXmbPAcy1eDDejxTDBKe42ElHpC2QlFdhOedsp4i9QVjt8EqWGy1YzPaGqZhCVg/LWt8/+4BmiCzNGtpR21MGJf4kI/n/1sbe36e1QBCBAx4EVfTM82ZM2lh0P189e7eY0A3NzXWVrUek8SEn+DYYCQeEaC5hDHGreFHT1baY6KyrFx3G9oMm3fLrCqmNjFRnZa3LB/5m8FgCpq9B/1OCLRE5GzVTZnVzj/4V38PgCIpX16Kznijf01+MkDeS9oCF2hEXQ9tr+mPLrjGy4Cg5fyLgyCj1fUq33nMf79Svli2h83m3gqkoxJcXvBetFQP8V/gRjBNGmFXK5TfwLhbolWEjDqUGK3n+hxzQLif9zreYO88EIRTUNbzE1/Sn7rBEtjB0uawNje5OubWsB62SOlMZoZpxrDbMb4UvQrODPhSafmhcYe9zm/dHxssMfUthhDKjyMhoRhngPjbzfGXmIV2Omgrn/zbefK/PawUGSH6x4Qk4HCN4/X8S+XCf51JJtOQeHST/yfwg69uMkE07SONnhGUrL6j5oQn6JI+zkaH/H/P/Ti/pfOTfAWxQNiMvWX08mqbuUweFSQ/G5YUP/uCvZAXutf1+Nhl2jj/n4/fPOihPjwvfFnnjOaQvs9PSpF33d+396LASZ3IID/4UP4pf9eOMXw82ccoUUUHX6MfBWyBDvARCrdPmerUwKwW+lBIAe1dsAAAA==',
+    //         label: 'rect',
+    //         labelCfg: {
+    //             position: 'bottom'
+    //         }
+    //     },{
+    //         id: 'node4',
+    //         x: 300,
+    //         y: 400,
+    //         shape: 'rect',
+    //         label: 'rect',
+    //         labelCfg: {
+    //             position: 'bottom'
+    //         }
+    //     }],
+    //     edges: [
+    //         {
+    //             source: 'node1',
+    //             target: 'node2'
+    //         },
+    //         {
+    //             source: 'node3',
+    //             target: 'node2'
+    //         },
+    //         {
+    //             source: 'node2',
+    //             target: 'node4'
+    //         }
+    //     ]};
+
+    // 放大、变小动画
+    G6.registerNode('circle-animate', {
+        afterDraw(cfg, group) {
+            const shape = group.get('children')[0];
+            shape.animate({
+                repeat: true,
+                onFrame(ratio) {
+                    const diff = ratio <=0.5 ? ratio * 10 : (1 - ratio) * 10;
+                    return {
+                        r: cfg.size / 2 + diff
+                    }
+                }
+            }, 3000,'easeCubic');
+        }
+    }, 'circle');
+
+    G6.registerNode('background-animate', {
+        afterDraw(cfg, group) {
+            const r = cfg.size / 2;
+            const back1 = group.addShape('circle',{
+                zIndex: -3,
+                attrs: {
+                    x: 0,
+                    y: 0,
+                    r,
+                    fill: cfg.color,
+                    opacity: 0.6
+                }
+            });
+            const back2 = group.addShape('circle',{
+                zIndex: -2,
+                attrs: {
+                    x: 0,
+                    y: 0,
+                    r,
+                    fill: 'blue', // 为了显示清晰，随意设置了颜色
+                    opacity: 0.6
+                }
+            });
+
+            const back3 = group.addShape('circle',{
+                zIndex: -1,
+                attrs: {
+                    x: 0,
+                    y: 0,
+                    r,
+                    fill: 'green',
+                    opacity: 0.6
+                }
+            });
+            group.sort(); // 排序，根据zIndex 排序
+            back1.animate({ // 逐渐放大，并消失
+                r: r + 10,
+                opacity: 0.1,
+                repeat: true // 循环
+            }, 3000, 'easeCubic', null, 0) // 无延迟
+
+            back2.animate({ // 逐渐放大，并消失
+                r: r + 10,
+                opacity: 0.1,
+                repeat: true // 循环
+            }, 3000, 'easeCubic', null, 1000) // 1 秒延迟
+
+            back3.animate({ // 逐渐放大，并消失
+                r: r + 10,
+                opacity: 0.1,
+                repeat: true // 循环
+            }, 3000, 'easeCubic', null, 2000) // 2 秒延迟
+        }
+    }, 'circle');
+
+    G6.registerNode('inner-animate', {
+        afterDraw(cfg, group) {
+            const size = cfg.size;
+            const width = size[0] - 12;
+            const height = size[1] - 12;
+            const image = group.addShape('image', {
+                attrs: {
+                    x: - width / 2,
+                    y: - height / 2,
+                    width: width,
+                    height: height,
+                    img: cfg.img
+                }
+            });
+            image.animate({
+                onFrame(ratio) {
+                    const matrix = Util.mat3.create();
+                    const toMatrix = Util.transform(matrix, [
+                        ['r', ratio * Math.PI * 2]
+                    ]) ;
+                    return {
+                        matrix: toMatrix
+                    };
+                },
+                repeat: true
+            }, 3000, 'easeCubic');
+        }
+    }, 'rect');
+
+    const graph = new G6.Graph({
+        container: 'mountNode',
+        width: 1000,
+        height: 600
+    });
+    graph.data(data);
+    graph.render();
+</script>
+</body>
+</html>

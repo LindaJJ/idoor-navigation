@@ -1,0 +1,6 @@
+@import '~antd/dist/antd.css';
+
+#startButton{
+    display:block;
+    margin:50px auto;
+}

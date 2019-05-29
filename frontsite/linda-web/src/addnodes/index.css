@@ -1,0 +1,7 @@
+@import '~antd/dist/antd.css';
+
+#button{
+    display:block;
+    margin:50px auto;
+}
+

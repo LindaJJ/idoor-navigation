@@ -1,0 +1,23 @@
+@import '~antd/dist/antd.css';
+
+#href1{
+    /*background-size:100% 100%;*/
+    background: url(model1.jpg) no-repeat;
+    z-index: -1;
+    height:300px;
+    display:block;
+    background-size:cover
+}
+
+#href2{
+    /*background-size:100% 100%;*/
+    background: url(model2.jpg) no-repeat;
+    z-index: -1;
+    height:300px;
+    display:block;
+    background-size:cover
+}
+#startButton{
+    display:block;
+    margin:50px auto;
+}

@@ -2,7 +2,7 @@
   {
     "nodeId":"1",
     "nodeName":"A101",
-    "revelantNode":[{
+    "relevantNode":[{
       "nodeId":"2",
       "angle":"0",
       "distance":"100"
@@ -15,7 +15,7 @@
   {
     "nodeId":"2",
     "nodeName":"A102",
-    "revelantNode":[{
+    "relevantNode":[{
       "nodeId":"1",
       "angle":"270",
       "distance":"100"
@@ -24,7 +24,7 @@
   {
     "nodeId":"3",
     "nodeName":"A103",
-    "revelantNode":[{
+    "relevantNode":[{
       "nodeId":"1",
       "angle":"270",
       "distance":"200"

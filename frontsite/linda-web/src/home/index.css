@@ -1,0 +1,17 @@
+@import '~antd/dist/antd.css';
+
+#href{
+    /*background-size:100% 100%;*/
+    background: url(index.jpg) no-repeat;
+    z-index: -1;
+    height:300px;
+    display:block;
+    background-size:cover
+}
+#backgroundDiv{
+    background-color: #f8f8f8;
+}
+#startButton{
+    display:block;
+    margin:100px auto;
+}
