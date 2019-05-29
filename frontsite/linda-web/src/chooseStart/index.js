@@ -49,7 +49,7 @@ class ChooseStart extends Component{
     }
 
     handleSubmit = () => {
-        window.location.href = "http://localhost:3000/showNodes/" + this.state.startNodeName + "/" + this.state.endNodeName;
+        window.location.href = "/showNodes/" + this.state.startNodeName + "/" + this.state.endNodeName;
     };
 
     organizeData = () => {

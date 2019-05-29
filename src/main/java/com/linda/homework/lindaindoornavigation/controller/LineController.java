@@ -37,7 +37,7 @@ public class LineController extends BaseController {
     public List<SimilarNodeDTO> rankSimilarPics(@RequestParam("imgStr") String imgStr){
         List<SimilarNodeDTO> similarNodeDTOS = new ArrayList<>();
         try {
-            similarNodeDTOS = pictureService.rankSimilarPics(Base64Util.decode(Base64Util.deleteJPEGBase64Prefix(imgStr)));
+            similarNodeDTOS = pictureService.rankSimilarPics(Base64Util.decode(Base64Util.deleteBase64Prefix(imgStr)));
         } catch (Throwable e) {
             logger.error("LineController#rankSimilarPics", e);
         }

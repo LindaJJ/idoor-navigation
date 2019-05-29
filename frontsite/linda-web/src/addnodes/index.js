@@ -78,7 +78,7 @@ class AddNodes extends Component{
             data:_this.organizeEndData(),
             success(e, res, result) {
                 console.log(result);
-                window.location.href="http://localhost:3000/chooseModel";
+                window.location.href="/chooseModel";
             }
         })
     };
@@ -101,7 +101,7 @@ class AddNodes extends Component{
     }
 
     clear = () => {
-        window.location.href = "http://localhost:3000/addNodes";
+        window.location.href = "/addNodes";
     }
 
     cancelUnfinishedModelVisible = () => {

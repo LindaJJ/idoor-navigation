@@ -65,7 +65,7 @@ public class NodeController extends BaseController {
                 NodeDO nodeDO = new NodeDO();
                 nodeDO.setNodeName(newNodeDTO.getNodeName());
                 nodeDO.setNodeId(nodeId);
-                byte[] pics = ImageHelper.base64tobyteArr(Base64Util.deleteJPEGBase64Prefix(newNodeDTO.getImgStr()));
+                byte[] pics = ImageHelper.base64tobyteArr(Base64Util.deleteBase64Prefix(newNodeDTO.getImgStr()));
                 nodeDO.setNodePic(newNodeDTO.getImgStr());
                 if(pics != null) {
                     nodeDO.setpHashCode(SimilarImageSearch.produceFingerPrint(pics));

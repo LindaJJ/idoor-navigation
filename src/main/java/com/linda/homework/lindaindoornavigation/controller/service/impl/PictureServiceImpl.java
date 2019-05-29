@@ -41,8 +41,8 @@ public class PictureServiceImpl implements PictureService {
         // 按照图片相似度排序的treeSet
         TreeSet<NodeDO>  treeSet = new TreeSet<>((o1, o2) -> {
             try {
-                String hashCode1 = SimilarImageSearch.produceFingerPrint(ImageHelper.readImage(Base64Util.decode(Base64Util.deleteJPEGBase64Prefix(o1.getNodePic()))));
-                String hashCode2 = SimilarImageSearch.produceFingerPrint(ImageHelper.readImage(Base64Util.decode(Base64Util.deleteJPEGBase64Prefix(o2.getNodePic()))));
+                String hashCode1 = SimilarImageSearch.produceFingerPrint(ImageHelper.readImage(Base64Util.decode(Base64Util.deleteBase64Prefix(o1.getNodePic()))));
+                String hashCode2 = SimilarImageSearch.produceFingerPrint(ImageHelper.readImage(Base64Util.decode(Base64Util.deleteBase64Prefix(o2.getNodePic()))));
                 int diff1 = SimilarImageSearch.hammingDistance(hashCode, hashCode1);
                 int diff2 = SimilarImageSearch.hammingDistance(hashCode, hashCode2);
                 if (diff1 == diff2) {

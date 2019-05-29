@@ -8,6 +8,8 @@ public class Base64Util {
 
     private static final String JPEG_BASE64_PREFIX = "data:image/jpeg;base64,";
 
+    private static final String PNG_BASE64_PREFIX = "data:image/png;base64,";
+
     /**
      * 将二进制数据编码为BASE64字符串
      * @param binaryData
@@ -35,12 +37,17 @@ public class Base64Util {
     }
 
     /**
-     * 去除掉jpeg图片中base64前缀
+     * 去除掉图片中base64前缀
      * @param str
      * @return
      */
-    public static String deleteJPEGBase64Prefix(String str){
-        return str.replaceAll(JPEG_BASE64_PREFIX, "");
+    public static String deleteBase64Prefix(String str){
+        if(str.contains(JPEG_BASE64_PREFIX)) {
+            return str.replaceAll(JPEG_BASE64_PREFIX, "");
+        } else if (str.contains(PNG_BASE64_PREFIX)) {
+            return str.replaceAll(PNG_BASE64_PREFIX, "");
+        }
+        return str;
     }
 
 }
